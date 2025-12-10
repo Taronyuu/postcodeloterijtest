@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postcode Loterij Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        @keyframes gradient-x {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.4); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        @keyframes slide-up {
+            0% { transform: translateY(100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes blob {
+            0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+        }
+
+        @keyframes count-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(5px) translateY(-5px); }
+            50% { transform: translateX(0) translateY(-10px); }
+            75% { transform: translateX(-5px) translateY(-5px); }
+        }
+
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes neon-pulse {
+            0%, 100% {
+                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #a855f7, 0 0 20px #a855f7, 0 0 35px #a855f7;
+            }
+            50% {
+                text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 8px #a855f7, 0 0 10px #a855f7, 0 0 15px #a855f7;
+            }
+        }
+
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient-x 3s ease infinite;
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+        .animate-bounce-in { animation: bounce-in 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
+        .animate-blob { animation: blob 7s ease-in-out infinite; }
+        .animate-wave { animation: wave 2s ease-in-out infinite; }
+        .animate-neon { animation: neon-pulse 1.5s ease-in-out infinite; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.3), 0 0 30px rgba(168, 85, 247, 0.4);
+        }
+
+        .card-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card-3d:hover {
+            transform: rotateY(5deg) rotateX(5deg);
+        }
+
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            animation: confetti 3s ease-out forwards;
+        }
+
+        .prize-card {
+            opacity: 0;
+            transform: translateY(30px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .prize-card.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid transparent;
+            border-top-color: #a855f7;
+            border-right-color: #ec4899;
+            border-radius: 50%;
+            animation: spin-slow 1s linear infinite;
+        }
+
+        .number-roll {
+            display: inline-block;
+            overflow: hidden;
+            height: 1.2em;
+        }
+
+        .number-roll span {
+            display: block;
+            animation: count-up 0.3s ease-out forwards;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-950 text-white overflow-x-hidden">
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="orb w-96 h-96 bg-purple-600 -top-48 -left-48 animate-blob"></div>
+        <div class="orb w-80 h-80 bg-pink-600 top-1/2 -right-40 animate-blob" style="animation-delay: -2s;"></div>
+        <div class="orb w-72 h-72 bg-orange-500 -bottom-36 left-1/3 animate-blob" style="animation-delay: -4s;"></div>
+        <div class="orb w-64 h-64 bg-blue-600 top-1/4 left-1/2 animate-blob" style="animation-delay: -3s;"></div>
+    </div>
+
+    <div class="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-900 via-gray-950 to-black opacity-80"></div>
+
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
+        <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50"></div>
+
+        <div id="main-container" class="w-full max-w-2xl">
+            <div class="text-center mb-12 animate-float">
+                <h1 class="text-5xl md:text-7xl font-bold mb-4">
+                    <span class="text-gradient animate-neon">Postcode</span>
+                    <span class="text-white">Loterij</span>
+                </h1>
+                <p class="text-gray-400 text-lg">Ontdek wat jouw postcode heeft gewonnen</p>
+            </div>
+
+            <div class="glass rounded-3xl p-8 md:p-12 animate-pulse-glow card-3d transition-all duration-500">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 rounded-2xl blur opacity-30 animate-gradient"></div>
+                    <div class="relative flex flex-col md:flex-row gap-4">
+                        <input
+                            type="text"
+                            id="postcode-input"
+                            placeholder="1082GB"
+                            maxlength="6"
+                            class="flex-1 bg-gray-900/80 border-2 border-gray-700 rounded-xl px-6 py-4 text-2xl font-bold tracking-widest text-center uppercase focus:border-purple-500 focus:outline-none input-glow transition-all duration-300 placeholder-gray-600"
+                        >
+                        <button
+                            id="check-btn"
+                            class="relative overflow-hidden bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 rounded-xl px-8 py-4 font-bold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30 active:scale-95"
+                        >
+                            <span class="relative z-10">Check Nu!</span>
+                            <div class="absolute inset-0 animate-shimmer"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden mt-12 flex flex-col items-center gap-4">
+                <div class="loader"></div>
+                <p class="text-gray-400 animate-pulse">Prijzen ophalen...</p>
+            </div>
+
+            <div id="results" class="hidden mt-12 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="glass rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300 animate-slide-up" style="animation-delay: 0.1s;">
+                        <div class="text-gray-400 text-sm uppercase tracking-wider mb-2">Totale Kosten</div>
+                        <div class="text-4xl font-bold text-red-400">
+                            €<span id="kosten" class="number-roll">0</span>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300 animate-slide-up" style="animation-delay: 0.2s;">
+                        <div class="text-gray-400 text-sm uppercase tracking-wider mb-2">Verdiensten</div>
+                        <div class="text-4xl font-bold text-green-400">
+                            €<span id="verdiensten" class="number-roll">0</span>
+                        </div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 text-center transform hover:scale-105 transition-all duration-300 animate-slide-up" style="animation-delay: 0.3s;">
+                        <div class="text-gray-400 text-sm uppercase tracking-wider mb-2">Netto Resultaat</div>
+                        <div class="text-4xl font-bold">
+                            <span id="netto-prefix">-</span>€<span id="netto" class="number-roll">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl p-6 animate-slide-up" style="animation-delay: 0.4s;">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gradient">Gewonnen Prijzen</h2>
+                        <div class="flex items-center gap-2 text-gray-400 text-sm">
+                            <span id="prize-count">0</span> prijzen
+                            <span class="animate-wave inline-block">🎉</span>
+                        </div>
+                    </div>
+                    <div id="prizes" class="max-h-96 overflow-y-auto space-y-3 scrollbar-hide pr-2"></div>
+                </div>
+
+                <div class="glass rounded-2xl p-6 animate-slide-up text-center" style="animation-delay: 0.5s;">
+                    <p class="text-gray-500 text-sm">
+                        Laatst bijgewerkt: <span id="updated" class="text-purple-400"></span>
+                    </p>
+                </div>
+            </div>
+
+            <div id="error" class="hidden mt-12 glass rounded-2xl p-8 text-center border border-red-500/30">
+                <div class="text-6xl mb-4">😢</div>
+                <h3 class="text-2xl font-bold text-red-400 mb-2">Oeps!</h3>
+                <p id="error-message" class="text-gray-400"></p>
+            </div>
+        </div>
+
+        <footer class="mt-16 text-center text-gray-600 text-sm">
+            <p>Powered by <a href="https://postcode.dev.isahome.nl" target="_blank" class="text-purple-400 hover:text-purple-300 transition-colors">postcode.dev.isahome.nl</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const postcodeInput = document.getElementById('postcode-input');
+        const checkBtn = document.getElementById('check-btn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const confettiContainer = document.getElementById('confetti-container');
+
+        function createConfetti() {
+            const colors = ['#a855f7', '#ec4899', '#f97316', '#22c55e', '#3b82f6', '#facc15'];
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + 'vw';
+                    particle.style.top = '-20px';
+                    particle.style.width = Math.random() * 10 + 5 + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    particle.style.animationDuration = Math.random() * 2 + 2 + 's';
+                    confettiContainer.appendChild(particle);
+                    setTimeout(() => particle.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        function animateNumber(element, target, duration = 1500) {
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(start + (target - start) * easeOut);
+                element.textContent = current.toLocaleString('nl-NL');
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function formatDate(dateStr) {
+            const [year, month] = dateStr.split('-');
+            const months = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+            return `${months[parseInt(month) - 1]} ${year}`;
+        }
+
+        function showError(message) {
+            loading.classList.add('hidden');
+            results.classList.add('hidden');
+            error.classList.remove('hidden');
+            document.getElementById('error-message').textContent = message;
+        }
+
+        function showResults(data) {
+            loading.classList.add('hidden');
+            error.classList.add('hidden');
+            results.classList.remove('hidden');
+
+            const kosten = data.kosten || 0;
+            const verdiensten = data.verdiensten || 0;
+            const netto = kosten - verdiensten;
+
+            setTimeout(() => animateNumber(document.getElementById('kosten'), kosten), 300);
+            setTimeout(() => animateNumber(document.getElementById('verdiensten'), verdiensten), 500);
+            setTimeout(() => {
+                animateNumber(document.getElementById('netto'), Math.abs(netto));
+                const nettoEl = document.getElementById('netto').parentElement;
+                const prefixEl = document.getElementById('netto-prefix');
+                if (netto > 0) {
+                    nettoEl.className = 'text-4xl font-bold text-red-400';
+                    prefixEl.textContent = '-€';
+                    prefixEl.nextSibling.textContent = '';
+                } else {
+                    nettoEl.className = 'text-4xl font-bold text-green-400';
+                    prefixEl.textContent = '+€';
+                    prefixEl.nextSibling.textContent = '';
+                }
+            }, 700);
+
+            const prizes = data.prijzen || [];
+            document.getElementById('prize-count').textContent = prizes.length;
+            document.getElementById('updated').textContent = data.updated || '-';
+
+            const prizesContainer = document.getElementById('prizes');
+            prizesContainer.innerHTML = '';
+
+            prizes.slice().reverse().forEach((prize, index) => {
+                const [date, description, value] = prize;
+                const card = document.createElement('div');
+                card.className = 'prize-card glass-dark rounded-xl p-4 flex items-center justify-between gap-4 hover:bg-white/10 transition-all duration-300 cursor-default';
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl flex-shrink-0">
+                            ${value > 0 ? '💰' : '🎁'}
+                        </div>
+                        <div>
+                            <div class="font-semibold text-white">${description}</div>
+                            <div class="text-sm text-gray-500">${formatDate(date)}</div>
+                        </div>
+                    </div>
+                    ${value > 0 ? `<div class="text-green-400 font-bold text-lg">€${value}</div>` : ''}
+                `;
+
+                prizesContainer.appendChild(card);
+
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, 100 + index * 50);
+            });
+
+            if (prizes.length > 0) {
+                setTimeout(createConfetti, 500);
+            }
+        }
+
+        async function checkPostcode() {
+            const postcode = postcodeInput.value.trim().toUpperCase().replace(/\s/g, '');
+
+            if (!postcode || postcode.length < 4) {
+                showError('Voer een geldige postcode in');
+                return;
+            }
+
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            error.classList.add('hidden');
+
+            try {
+                const response = await fetch(`https://postcode.dev.isahome.nl/api.php?postcode=${encodeURIComponent(postcode)}`);
+
+                if (!response.ok) {
+                    throw new Error('Postcode niet gevonden');
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                showResults(data);
+            } catch (err) {
+                showError(err.message || 'Er is iets misgegaan. Probeer het opnieuw.');
+            }
+        }
+
+        checkBtn.addEventListener('click', checkPostcode);
+        postcodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPostcode();
+        });
+
+        postcodeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            const orbs = document.querySelectorAll('.orb');
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+
+            orbs.forEach((orb, i) => {
+                const speed = (i + 1) * 10;
+                orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
