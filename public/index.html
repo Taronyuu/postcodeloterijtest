@@ -475,7 +475,17 @@
 
         .stat-card {
             position: relative;
+            overflow: visible;
+        }
+
+        .stat-card-inner {
             overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-card:hover {
+            z-index: 10;
         }
 
         .stat-card::before {
@@ -557,13 +567,99 @@
             background: linear-gradient(90deg, transparent, #a855f7, #ec4899, transparent);
             animation: energy-wave 3s ease-out infinite;
         }
+
+        .tooltip-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: help;
+        }
+
+        .tooltip-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            animation: pulse-glow 2s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .tooltip-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .tooltip-popup {
+            position: fixed;
+            width: 280px;
+            padding: 16px;
+            background: rgba(15, 15, 25, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #d1d5db;
+            text-align: left;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.8) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 9999;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(168, 85, 247, 0.2);
+            pointer-events: none;
+        }
+
+        .tooltip-popup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #a855f7, #ec4899, #f97316);
+            border-radius: 16px 16px 0 0;
+            animation: shimmer 2s infinite;
+            background-size: 200% 100%;
+        }
+
+        .tooltip-popup::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: rgba(15, 15, 25, 0.98);
+        }
+
+        .tooltip-popup.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        @media (max-width: 640px) {
+            .tooltip-popup {
+                width: 260px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen bg-gray-950 text-white overflow-x-hidden">
     <div class="noise"></div>
     <div class="vignette"></div>
     <div class="scanline"></div>
-        <div id="cursor-glow" class="cursor-glow"></div>
+    <div id="cursor-glow" class="cursor-glow"></div>
+    <div id="kosten-tooltip-popup" class="tooltip-popup">
+        Dit zijn de kosten van januari 2012 t/m november 2025 op basis van één lot. In deze berekening is de straatprijsverdubbelaar uitgeschakeld tot 2017, waarna deze standaard werd en enkel telefonisch geannuleerd kon worden.
+    </div>
 
     <div id="matrix-container" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
     <div id="particles-container" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
@@ -668,7 +764,10 @@
                     <div class="stat-card rounded-2xl p-6 text-center transform hover:scale-110 hover:rotate-2 transition-all duration-500 animate-slide-up" style="animation-delay: 0.1s;">
                         <div class="stat-card-inner rounded-2xl p-6">
                             <div class="absolute top-2 right-2 text-2xl animate-heartbeat">💸</div>
-                            <div class="text-gray-400 text-sm uppercase tracking-wider mb-2">Totale Kosten</div>
+                            <div class="tooltip-trigger text-gray-400 text-sm uppercase tracking-wider mb-2 justify-center" id="kosten-tooltip-trigger">
+                                <span>Totale Kosten</span>
+                                <span class="tooltip-icon">?</span>
+                            </div>
                             <div class="text-4xl font-bold text-red-400 animate-pulse">
                                 €<span id="kosten">0</span>
                             </div>
@@ -690,7 +789,7 @@
                             <div class="absolute top-2 right-2 text-2xl animate-swing">📊</div>
                             <div class="text-gray-400 text-sm uppercase tracking-wider mb-2">Netto Resultaat</div>
                             <div class="text-4xl font-bold" id="netto-container">
-                                <span id="netto-prefix">-</span>€<span id="netto">0</span>
+                                <span id="netto-prefix">-€</span><span id="netto">0</span>
                             </div>
                             <div class="mt-2 h-1 bg-gradient-to-r from-purple-500/0 via-purple-500 to-purple-500/0 animate-shimmer"></div>
                         </div>
@@ -1128,6 +1227,63 @@
             const y = Math.random() * window.innerHeight;
             createSparkles(x, y, 1);
         }, 2000);
+
+        const kostenTooltipTrigger = document.getElementById('kosten-tooltip-trigger');
+        const kostenTooltipPopup = document.getElementById('kosten-tooltip-popup');
+        let tooltipVisible = false;
+
+        function positionTooltip() {
+            const rect = kostenTooltipTrigger.getBoundingClientRect();
+            const tooltipWidth = 280;
+            let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+
+            if (left < 10) left = 10;
+            if (left + tooltipWidth > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipWidth - 10;
+            }
+
+            kostenTooltipPopup.style.left = left + 'px';
+            kostenTooltipPopup.style.top = (rect.top - kostenTooltipPopup.offsetHeight - 12) + 'px';
+        }
+
+        function showTooltip() {
+            positionTooltip();
+            kostenTooltipPopup.classList.add('visible');
+            tooltipVisible = true;
+            const rect = kostenTooltipTrigger.getBoundingClientRect();
+            createSparkles(rect.left + rect.width / 2, rect.top, 5);
+        }
+
+        function hideTooltip() {
+            kostenTooltipPopup.classList.remove('visible');
+            tooltipVisible = false;
+        }
+
+        kostenTooltipTrigger.addEventListener('mouseenter', showTooltip);
+        kostenTooltipTrigger.addEventListener('mouseleave', hideTooltip);
+
+        kostenTooltipTrigger.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (tooltipVisible) {
+                hideTooltip();
+            } else {
+                showTooltip();
+            }
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('#kosten-tooltip-trigger') && !e.target.closest('#kosten-tooltip-popup')) {
+                hideTooltip();
+            }
+        });
+
+        window.addEventListener('scroll', () => {
+            if (tooltipVisible) positionTooltip();
+        });
+
+        window.addEventListener('resize', () => {
+            if (tooltipVisible) positionTooltip();
+        });
     </script>
 </body>
 </html>
